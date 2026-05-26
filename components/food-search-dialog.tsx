@@ -7,6 +7,7 @@ import { Button } from './ui/button'
 import { Input } from './ui/input'
 import { Label } from './ui/label'
 import { Badge } from './ui/badge'
+import { CreateFoodDialog } from './create-food-dialog'
 import type { FoodItem, MealType } from '@/types'
 import { MEAL_LABELS } from '@/types'
 
@@ -179,9 +180,23 @@ export function FoodSearchDialog({ mealType, date, onAdded, trigger }: FoodSearc
                     <Badge variant="default" className="text-xs">
                       {Math.round(food.nutrients.calories_per_100g)} kcal/100g
                     </Badge>
+                    {food.source === 'custom' && (
+                      <Badge className="text-xs bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 border-0">
+                        Comunità
+                      </Badge>
+                    )}
                   </div>
                 </button>
               ))}
+            </div>
+          )}
+
+          {!selected && (
+            <div className="flex items-center justify-between">
+              <span className="text-xs text-neutral-400 dark:text-gray-500">
+                {results.length === 0 && query ? 'Nessun risultato' : ''}
+              </span>
+              <CreateFoodDialog onCreated={(food) => { setSelected(food); setResults([]) }} />
             </div>
           )}
 

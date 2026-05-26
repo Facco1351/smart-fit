@@ -38,6 +38,7 @@ export interface FoodItem {
   id: string
   name: string
   brand?: string
+  source?: 'openfoodfacts' | 'custom'
   nutrients: FoodNutrients
 }
 
