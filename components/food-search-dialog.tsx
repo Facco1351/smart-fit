@@ -197,7 +197,7 @@ export function FoodSearchDialog({ mealType, date, onAdded, trigger }: FoodSearc
         </DialogHeader>
 
         <div className="space-y-4">
-          <div className="flex gap-2">
+          <div className="space-y-2">
             <Input
               placeholder="Cerca alimento..."
               value={query}
@@ -205,18 +205,27 @@ export function FoodSearchDialog({ mealType, date, onAdded, trigger }: FoodSearc
               onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
               className="dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100 dark:placeholder-gray-400"
             />
-            <Button onClick={handleSearch} disabled={searching} size="icon" variant="outline" className="dark:border-gray-600 dark:text-gray-300 shrink-0">
-              {searching ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
-            </Button>
-            <Button
-              onClick={() => setScanning(true)}
-              size="icon"
-              variant="outline"
-              className="dark:border-gray-600 dark:text-gray-300 shrink-0"
-              title="Scansiona codice a barre"
-            >
-              {barcodeLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ScanBarcode className="h-4 w-4" />}
-            </Button>
+            <div className="grid grid-cols-3 gap-2">
+              <Button onClick={handleSearch} disabled={searching} variant="outline" className="dark:border-gray-600 dark:text-gray-300 gap-2">
+                {searching ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
+                Cerca
+              </Button>
+              <Button
+                onClick={() => setScanning(true)}
+                variant="outline"
+                className="dark:border-gray-600 dark:text-gray-300 gap-2"
+                title="Scansiona codice a barre"
+              >
+                {barcodeLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ScanBarcode className="h-4 w-4" />}
+                Barcode
+              </Button>
+              <CreateFoodDialog onCreated={(food) => { setSelected(food); setResults([]) }} trigger={
+                <Button variant="outline" className="dark:border-gray-600 dark:text-gray-300 gap-2 w-full">
+                  <Plus className="h-4 w-4" />
+                  Crea
+                </Button>
+              } />
+            </div>
           </div>
 
           {barcodeError && (
@@ -269,13 +278,8 @@ export function FoodSearchDialog({ mealType, date, onAdded, trigger }: FoodSearc
             </div>
           )}
 
-          {!selected && (
-            <div className="flex items-center justify-between">
-              <span className="text-xs text-neutral-400 dark:text-gray-500">
-                {results.length === 0 && query.trim() ? 'Nessun risultato' : ''}
-              </span>
-              <CreateFoodDialog onCreated={(food) => { setSelected(food); setResults([]) }} />
-            </div>
+          {!selected && results.length === 0 && query.trim() && (
+            <p className="text-xs text-neutral-400 dark:text-gray-500 text-center">Nessun risultato</p>
           )}
 
           {selected && (
