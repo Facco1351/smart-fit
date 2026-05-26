@@ -1,8 +1,8 @@
 'use client'
 
-import Link from 'next/link'
-import { usePathname } from 'next/navigation'
-import { LayoutDashboard, BookOpen, User } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { usePathname, useRouter } from 'next/navigation'
+import { LayoutDashboard, BookOpen, User, Loader2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 const links = [
@@ -13,16 +13,29 @@ const links = [
 
 export function BottomNav() {
   const pathname = usePathname()
+  const router = useRouter()
+  const [loadingHref, setLoadingHref] = useState<string | null>(null)
+
+  useEffect(() => {
+    setLoadingHref(null)
+  }, [pathname])
+
+  function handleNav(href: string) {
+    if (pathname === href || loadingHref === href) return
+    setLoadingHref(href)
+    router.push(href)
+  }
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-900 border-t border-neutral-100 dark:border-gray-800 z-40 safe-bottom">
       <div className="flex justify-around items-center h-16 max-w-lg mx-auto px-4">
         {links.map(({ href, label, icon: Icon }) => {
           const active = pathname === href || (href !== '/dashboard' && pathname.startsWith(href))
+          const loading = loadingHref === href
           return (
-            <Link
+            <button
               key={href}
-              href={href}
+              onClick={() => handleNav(href)}
               className={cn(
                 'flex flex-col items-center gap-0.5 px-6 py-2 rounded-xl transition-colors min-w-[64px]',
                 active
@@ -30,9 +43,11 @@ export function BottomNav() {
                   : 'text-neutral-400 dark:text-gray-500 hover:text-neutral-600 dark:hover:text-gray-300'
               )}
             >
-              <Icon className={cn('h-6 w-6', active && 'stroke-[2.5]')} />
+              {loading
+                ? <Loader2 className="h-6 w-6 animate-spin" />
+                : <Icon className={cn('h-6 w-6', active && 'stroke-[2.5]')} />}
               <span className="text-[11px] font-medium">{label}</span>
-            </Link>
+            </button>
           )
         })}
       </div>
