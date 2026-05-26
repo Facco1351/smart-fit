@@ -52,15 +52,15 @@ export function DiaryClient({ initialEntries, profile, today }: DiaryClientProps
       <div className="flex items-center justify-between">
         <button
           onClick={() => goDay(-1)}
-          className="p-2 rounded-xl hover:bg-neutral-100 transition-colors"
+          className="p-3 rounded-xl hover:bg-neutral-100 dark:hover:bg-gray-700 transition-colors"
         >
-          <ChevronLeft className="h-5 w-5 text-neutral-600" />
+          <ChevronLeft className="h-5 w-5 text-neutral-600 dark:text-gray-400" />
         </button>
 
         <div className="text-center">
-          <h1 className="text-base font-semibold text-neutral-800 capitalize">{displayDate}</h1>
+          <h1 className="text-base font-semibold text-neutral-800 dark:text-gray-100 capitalize">{displayDate}</h1>
           {isToday && (
-            <span className="text-xs text-emerald-600 font-medium bg-emerald-50 px-2 py-0.5 rounded-full">
+            <span className="text-xs text-emerald-600 dark:text-emerald-400 font-medium bg-emerald-50 dark:bg-emerald-900/30 px-2 py-0.5 rounded-full">
               Oggi
             </span>
           )}
@@ -69,9 +69,9 @@ export function DiaryClient({ initialEntries, profile, today }: DiaryClientProps
         <button
           onClick={() => goDay(1)}
           disabled={isToday}
-          className="p-2 rounded-xl hover:bg-neutral-100 transition-colors disabled:opacity-30"
+          className="p-3 rounded-xl hover:bg-neutral-100 dark:hover:bg-gray-700 transition-colors disabled:opacity-30"
         >
-          <ChevronRight className="h-5 w-5 text-neutral-600" />
+          <ChevronRight className="h-5 w-5 text-neutral-600 dark:text-gray-400" />
         </button>
       </div>
 

@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+@variant dark (&:where(.dark, .dark *));
+
 @theme inline {
   --color-background: #f9fafb;
   --color-foreground: #111827;
@@ -13,8 +15,17 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+.dark body {
+  background: #111827;
+  color: #f9fafb;
+}
+
 .safe-bottom {
   padding-bottom: env(safe-area-inset-bottom);
+}
+
+.safe-top {
+  padding-top: env(safe-area-inset-top);
 }
 
 @keyframes spin {
@@ -22,4 +33,12 @@ body {
 }
 .animate-spin {
   animation: spin 1s linear infinite;
+}
+
+@keyframes scan {
+  0%, 100% { top: 8px; }
+  50% { top: calc(100% - 10px); }
+}
+.animate-scan {
+  animation: scan 2s ease-in-out infinite;
 }

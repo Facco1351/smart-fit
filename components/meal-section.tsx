@@ -26,40 +26,40 @@ export function MealSection({ mealType, entries, date, onUpdate }: MealSectionPr
   }
 
   return (
-    <div className="bg-white rounded-2xl border border-neutral-100 overflow-hidden">
-      <div className="flex items-center justify-between px-4 py-3 border-b border-neutral-50">
+    <div className="bg-white dark:bg-gray-800 rounded-2xl border border-neutral-100 dark:border-gray-700 overflow-hidden">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-neutral-50 dark:border-gray-700">
         <div className="flex items-center gap-2">
           <span className="text-lg">{MEAL_ICONS[mealType]}</span>
           <div>
-            <p className="font-semibold text-neutral-800 text-sm">{MEAL_LABELS[mealType]}</p>
-            <p className="text-xs text-neutral-400">{Math.round(total)} kcal</p>
+            <p className="font-semibold text-neutral-800 dark:text-gray-100 text-sm">{MEAL_LABELS[mealType]}</p>
+            <p className="text-xs text-neutral-400 dark:text-gray-500">{Math.round(total)} kcal</p>
           </div>
         </div>
         <FoodSearchDialog mealType={mealType} date={date} onAdded={onUpdate} />
       </div>
 
       {entries.length === 0 ? (
-        <div className="px-4 py-3 text-sm text-neutral-400 italic">Nessun alimento registrato</div>
+        <div className="px-4 py-3 text-sm text-neutral-400 dark:text-gray-500 italic">Nessun alimento registrato</div>
       ) : (
-        <div className="divide-y divide-neutral-50">
+        <div className="divide-y divide-neutral-50 dark:divide-gray-700">
           {entries.map((entry) => (
-            <div key={entry.id} className="flex items-center justify-between px-4 py-2.5">
+            <div key={entry.id} className="flex items-center justify-between px-4 py-3">
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-neutral-700 truncate">{entry.food_name}</p>
-                <p className="text-xs text-neutral-400">
+                <p className="text-sm font-medium text-neutral-700 dark:text-gray-200 truncate">{entry.food_name}</p>
+                <p className="text-xs text-neutral-400 dark:text-gray-500">
                   {entry.quantity_g}g
-                  {entry.protein_g != null && ` · P: ${Math.round(entry.protein_g)}g`}
                   {entry.carbs_g != null && ` · C: ${Math.round(entry.carbs_g)}g`}
+                  {entry.protein_g != null && ` · P: ${Math.round(entry.protein_g)}g`}
                   {entry.fat_g != null && ` · G: ${Math.round(entry.fat_g)}g`}
                 </p>
               </div>
               <div className="flex items-center gap-3 ml-2">
-                <span className="text-sm font-semibold text-neutral-700">{Math.round(entry.calories)} kcal</span>
+                <span className="text-sm font-semibold text-neutral-700 dark:text-gray-200">{Math.round(entry.calories)} kcal</span>
                 <button
                   onClick={() => handleDelete(entry.id)}
-                  className="p-1 rounded-lg text-neutral-300 hover:text-red-400 hover:bg-red-50 transition-colors"
+                  className="p-2 rounded-lg text-neutral-300 dark:text-gray-600 hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
                 >
-                  <Trash2 className="h-3.5 w-3.5" />
+                  <Trash2 className="h-4 w-4" />
                 </button>
               </div>
             </div>

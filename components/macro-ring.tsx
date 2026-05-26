@@ -17,7 +17,7 @@ export function MacroRing({ label, value, goal, color, unit = 'g' }: MacroRingPr
     <div className="flex flex-col items-center gap-1.5">
       <div className="relative w-16 h-16">
         <svg className="w-16 h-16 -rotate-90" viewBox="0 0 64 64">
-          <circle cx="32" cy="32" r={r} fill="none" stroke="#f3f4f6" strokeWidth="6" />
+          <circle cx="32" cy="32" r={r} fill="none" stroke="currentColor" strokeWidth="6" className="text-neutral-100 dark:text-gray-700" />
           <circle
             cx="32"
             cy="32"
@@ -32,12 +32,12 @@ export function MacroRing({ label, value, goal, color, unit = 'g' }: MacroRingPr
           />
         </svg>
         <div className="absolute inset-0 flex items-center justify-center">
-          <span className="text-xs font-bold text-neutral-800">{Math.round(value)}</span>
+          <span className="text-xs font-bold text-neutral-800 dark:text-gray-100">{Math.round(value)}</span>
         </div>
       </div>
       <div className="text-center">
-        <p className="text-xs font-medium text-neutral-500">{label}</p>
-        <p className="text-xs text-neutral-400">{Math.round(remaining)}{unit} rimasti</p>
+        <p className="text-xs font-medium text-neutral-500 dark:text-gray-400">{label}</p>
+        <p className="text-xs text-neutral-400 dark:text-gray-500">{Math.round(remaining)}{unit} rimasti</p>
       </div>
     </div>
   )

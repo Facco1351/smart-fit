@@ -46,8 +46,8 @@ export function CalorieSummary({ totals, profile }: CalorieSummaryProps) {
       </div>
 
       <div className="flex justify-around pt-3 border-t border-white/20">
-        <MacroMini label="Proteine" value={totals.protein} goal={profile.daily_protein_goal} color="#6ee7b7" />
         <MacroMini label="Carboidrati" value={totals.carbs} goal={profile.daily_carbs_goal} color="#fbbf24" />
+        <MacroMini label="Proteine" value={totals.protein} goal={profile.daily_protein_goal} color="#6ee7b7" />
         <MacroMini label="Grassi" value={totals.fat} goal={profile.daily_fat_goal} color="#f87171" />
       </div>
     </div>

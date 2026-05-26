@@ -1,5 +1,21 @@
 import type { FoodItem } from '@/types'
 
+function mapProduct(p: OFFProduct, id: string): FoodItem | null {
+  if (!p.product_name || p.nutriments?.['energy-kcal_100g'] === undefined) return null
+  return {
+    id,
+    name: p.product_name,
+    brand: p.brands,
+    nutrients: {
+      calories_per_100g: p.nutriments['energy-kcal_100g']!,
+      protein_per_100g: p.nutriments.proteins_100g ?? 0,
+      carbs_per_100g: p.nutriments.carbohydrates_100g ?? 0,
+      fat_per_100g: p.nutriments.fat_100g ?? 0,
+      fiber_per_100g: p.nutriments.fiber_100g ?? 0,
+    },
+  }
+}
+
 interface OFFProduct {
   product_name?: string
   brands?: string
@@ -30,22 +46,18 @@ export async function searchFoods(query: string): Promise<FoodItem[]> {
   const data: OFFSearchResponse = await res.json()
 
   return data.products
-    .filter(
-      (p) =>
-        p.product_name &&
-        p.nutriments?.['energy-kcal_100g'] !== undefined
-    )
-    .map((p, i) => ({
-      id: `off_${i}_${Date.now()}`,
-      name: p.product_name!,
-      brand: p.brands,
-      nutrients: {
-        calories_per_100g: p.nutriments!['energy-kcal_100g']!,
-        protein_per_100g: p.nutriments!.proteins_100g ?? 0,
-        carbs_per_100g: p.nutriments!.carbohydrates_100g ?? 0,
-        fat_per_100g: p.nutriments!.fat_100g ?? 0,
-        fiber_per_100g: p.nutriments!.fiber_100g ?? 0,
-      },
-    }))
+    .map((p, i) => mapProduct(p, `off_${i}_${Date.now()}`))
+    .filter((x): x is FoodItem => x !== null)
     .slice(0, 15)
+}
+
+export async function lookupByBarcode(barcode: string): Promise<FoodItem | null> {
+  const res = await fetch(
+    `https://world.openfoodfacts.org/api/v0/product/${barcode}.json`,
+    { headers: { 'User-Agent': 'SmartFit-CalorieTracker/1.0' } }
+  )
+  if (!res.ok) return null
+  const data = await res.json()
+  if (data.status !== 1 || !data.product) return null
+  return mapProduct(data.product, `barcode_${barcode}`)
 }

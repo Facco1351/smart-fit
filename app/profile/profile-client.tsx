@@ -2,8 +2,9 @@
 
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { Loader2, LogOut, Save, User } from 'lucide-react'
+import { Loader2, LogOut, Save, User, Moon, Sun, Heart, Copy, Check } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
+import { useTheme } from '@/lib/theme'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -15,16 +16,40 @@ interface ProfileClientProps {
   email: string
 }
 
+const IBAN = 'IT78R0366901600534898976434'
+
 export function ProfileClient({ profile, email }: ProfileClientProps) {
   const router = useRouter()
+  const { theme, toggle } = useTheme()
   const [name, setName] = useState(profile.full_name ?? '')
-  const [calories, setCalories] = useState(String(profile.daily_calorie_goal))
-  const [protein, setProtein] = useState(String(profile.daily_protein_goal))
   const [carbs, setCarbs] = useState(String(profile.daily_carbs_goal))
+  const [protein, setProtein] = useState(String(profile.daily_protein_goal))
   const [fat, setFat] = useState(String(profile.daily_fat_goal))
+  const [calories, setCalories] = useState(String(profile.daily_calorie_goal))
   const [saved, setSaved] = useState(false)
+  const [copied, setCopied] = useState(false)
   const [saving, startSave] = useTransition()
   const [loggingOut, startLogout] = useTransition()
+
+  function recalcCalories(c: string, p: string, f: string) {
+    const cal = (parseFloat(c) || 0) * 4 + (parseFloat(p) || 0) * 4 + (parseFloat(f) || 0) * 9
+    setCalories(String(Math.round(cal)))
+  }
+
+  function handleCarbsChange(v: string) {
+    setCarbs(v)
+    recalcCalories(v, protein, fat)
+  }
+
+  function handleProteinChange(v: string) {
+    setProtein(v)
+    recalcCalories(carbs, v, fat)
+  }
+
+  function handleFatChange(v: string) {
+    setFat(v)
+    recalcCalories(carbs, protein, v)
+  }
 
   function handleSave() {
     startSave(async () => {
@@ -54,63 +79,112 @@ export function ProfileClient({ profile, email }: ProfileClientProps) {
     })
   }
 
+  function handleCopyIBAN() {
+    navigator.clipboard.writeText(IBAN).then(() => {
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    })
+  }
+
   return (
     <div className="px-4 pt-6 space-y-4">
-      <div className="flex items-center gap-3 mb-2">
-        <div className="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center">
-          <User className="h-6 w-6 text-emerald-600" />
+      <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center gap-3">
+          <div className="w-12 h-12 bg-emerald-100 dark:bg-emerald-900/40 rounded-full flex items-center justify-center">
+            <User className="h-6 w-6 text-emerald-600 dark:text-emerald-400" />
+          </div>
+          <div>
+            <h1 className="text-lg font-bold text-neutral-800 dark:text-gray-100">{name || 'Profilo'}</h1>
+            <p className="text-sm text-neutral-500 dark:text-gray-400">{email}</p>
+          </div>
         </div>
-        <div>
-          <h1 className="text-lg font-bold text-neutral-800">{name || 'Profilo'}</h1>
-          <p className="text-sm text-neutral-500">{email}</p>
-        </div>
+        <button
+          onClick={toggle}
+          className="p-2.5 rounded-full bg-neutral-100 dark:bg-gray-700 text-neutral-600 dark:text-gray-300 hover:bg-neutral-200 dark:hover:bg-gray-600 transition-colors"
+          title="Cambia tema"
+        >
+          {theme === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+        </button>
       </div>
 
-      <Card>
+      <Card className="dark:bg-gray-800 dark:border-gray-700">
         <CardHeader>
-          <CardTitle className="text-sm text-neutral-600">Informazioni</CardTitle>
+          <CardTitle className="text-sm text-neutral-600 dark:text-gray-400">Informazioni</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
           <div className="space-y-1.5">
-            <Label>Nome</Label>
-            <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Il tuo nome" />
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-sm text-neutral-600">Obiettivi giornalieri</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          <div className="space-y-1.5">
-            <Label>Calorie (kcal)</Label>
+            <Label className="dark:text-gray-300">Nome</Label>
             <Input
-              type="number"
-              value={calories}
-              onChange={(e) => setCalories(e.target.value)}
-              min="500"
-              max="6000"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Il tuo nome"
+              className="dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100"
             />
           </div>
+        </CardContent>
+      </Card>
+
+      <Card className="dark:bg-gray-800 dark:border-gray-700">
+        <CardHeader>
+          <CardTitle className="text-sm text-neutral-600 dark:text-gray-400">Obiettivi giornalieri</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
           <div className="grid grid-cols-3 gap-3">
             <div className="space-y-1.5">
-              <Label className="text-blue-600">Proteine (g)</Label>
-              <Input type="number" value={protein} onChange={(e) => setProtein(e.target.value)} min="0" />
+              <Label className="text-amber-600 dark:text-amber-400 text-xs">Carboidrati (g)</Label>
+              <Input
+                type="number"
+                inputMode="numeric"
+                value={carbs}
+                onChange={(e) => handleCarbsChange(e.target.value)}
+                min="0"
+                className="dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100"
+              />
             </div>
             <div className="space-y-1.5">
-              <Label className="text-amber-600">Carboidrati (g)</Label>
-              <Input type="number" value={carbs} onChange={(e) => setCarbs(e.target.value)} min="0" />
+              <Label className="text-blue-600 dark:text-blue-400 text-xs">Proteine (g)</Label>
+              <Input
+                type="number"
+                inputMode="numeric"
+                value={protein}
+                onChange={(e) => handleProteinChange(e.target.value)}
+                min="0"
+                className="dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100"
+              />
             </div>
             <div className="space-y-1.5">
-              <Label className="text-red-500">Grassi (g)</Label>
-              <Input type="number" value={fat} onChange={(e) => setFat(e.target.value)} min="0" />
+              <Label className="text-red-500 dark:text-red-400 text-xs">Grassi (g)</Label>
+              <Input
+                type="number"
+                inputMode="numeric"
+                value={fat}
+                onChange={(e) => handleFatChange(e.target.value)}
+                min="0"
+                className="dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100"
+              />
+            </div>
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-emerald-600 dark:text-emerald-400 text-xs">
+              Calorie calcolate (kcal)
+            </Label>
+            <div className="flex items-center gap-2">
+              <Input
+                type="number"
+                inputMode="numeric"
+                value={calories}
+                onChange={(e) => setCalories(e.target.value)}
+                min="500"
+                max="6000"
+                className="dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100"
+              />
+              <span className="text-xs text-neutral-400 dark:text-gray-500 whitespace-nowrap">C×4 + P×4 + G×9</span>
             </div>
           </div>
         </CardContent>
       </Card>
 
-      <Button onClick={handleSave} disabled={saving} className="w-full">
+      <Button onClick={handleSave} disabled={saving} className="w-full h-12">
         {saving ? (
           <Loader2 className="h-4 w-4 animate-spin mr-2" />
         ) : saved ? (
@@ -123,11 +197,41 @@ export function ProfileClient({ profile, email }: ProfileClientProps) {
         )}
       </Button>
 
+      <Card className="dark:bg-gray-800 dark:border-gray-700 border-pink-100 dark:border-pink-900/30">
+        <CardHeader>
+          <CardTitle className="text-sm text-pink-600 dark:text-pink-400 flex items-center gap-2">
+            <Heart className="h-4 w-4 fill-pink-500 text-pink-500" />
+            Supporta SmartFit
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <p className="text-xs text-neutral-500 dark:text-gray-400">
+            Se SmartFit ti è utile, puoi fare una donazione libera. Grazie di cuore!
+          </p>
+          <div className="bg-neutral-50 dark:bg-gray-700 rounded-xl p-3 space-y-1">
+            <p className="text-xs text-neutral-500 dark:text-gray-400 font-medium">Beneficiario</p>
+            <p className="text-sm font-semibold text-neutral-800 dark:text-gray-100">Facchini Domenico</p>
+          </div>
+          <div className="bg-neutral-50 dark:bg-gray-700 rounded-xl p-3 space-y-1">
+            <p className="text-xs text-neutral-500 dark:text-gray-400 font-medium">IBAN</p>
+            <div className="flex items-center justify-between gap-2">
+              <p className="text-xs font-mono font-semibold text-neutral-800 dark:text-gray-100 break-all">{IBAN}</p>
+              <button
+                onClick={handleCopyIBAN}
+                className="p-2 rounded-lg bg-white dark:bg-gray-600 text-neutral-400 dark:text-gray-300 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors shrink-0"
+              >
+                {copied ? <Check className="h-4 w-4 text-emerald-500" /> : <Copy className="h-4 w-4" />}
+              </button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       <Button
         onClick={handleLogout}
         disabled={loggingOut}
         variant="outline"
-        className="w-full text-red-500 border-red-200 hover:bg-red-50"
+        className="w-full h-12 text-red-500 border-red-200 dark:border-red-900/40 hover:bg-red-50 dark:hover:bg-red-900/20 dark:text-red-400"
       >
         {loggingOut ? (
           <Loader2 className="h-4 w-4 animate-spin mr-2" />
@@ -138,6 +242,8 @@ export function ProfileClient({ profile, email }: ProfileClientProps) {
           </>
         )}
       </Button>
+
+      <div className="h-4" />
     </div>
   )
 }

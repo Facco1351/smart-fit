@@ -42,12 +42,12 @@ export function DashboardClient({ profile, initialEntries, today }: DashboardCli
     <div className="px-4 pt-6 space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-bold text-neutral-900 capitalize">{dayName}</h1>
-          <p className="text-sm text-neutral-500">Ciao, {profile.full_name?.split(' ')[0] ?? 'atleta'} 👋</p>
+          <h1 className="text-xl font-bold text-neutral-900 dark:text-gray-100 capitalize">{dayName}</h1>
+          <p className="text-sm text-neutral-500 dark:text-gray-400">Ciao, {profile.full_name?.split(' ')[0] ?? 'atleta'} 👋</p>
         </div>
         <Link
           href="/diary"
-          className="flex items-center gap-1 text-sm text-emerald-600 font-medium hover:text-emerald-700"
+          className="flex items-center gap-1 text-sm text-emerald-600 dark:text-emerald-400 font-medium hover:text-emerald-700"
         >
           Diario <ChevronRight className="h-4 w-4" />
         </Link>
@@ -55,9 +55,9 @@ export function DashboardClient({ profile, initialEntries, today }: DashboardCli
 
       <CalorieSummary totals={totals} profile={profile} />
 
-      <Card>
+      <Card className="dark:bg-gray-800 dark:border-gray-700">
         <CardHeader>
-          <CardTitle className="text-sm text-neutral-600 flex items-center gap-2">
+          <CardTitle className="text-sm text-neutral-600 dark:text-gray-400 flex items-center gap-2">
             <TrendingUp className="h-4 w-4 text-emerald-500" />
             Macronutrienti
           </CardTitle>
@@ -65,16 +65,16 @@ export function DashboardClient({ profile, initialEntries, today }: DashboardCli
         <CardContent>
           <div className="flex justify-around">
             <MacroRing
-              label="Proteine"
-              value={totals.protein}
-              goal={profile.daily_protein_goal}
-              color="#3b82f6"
-            />
-            <MacroRing
               label="Carboidrati"
               value={totals.carbs}
               goal={profile.daily_carbs_goal}
               color="#f59e0b"
+            />
+            <MacroRing
+              label="Proteine"
+              value={totals.protein}
+              goal={profile.daily_protein_goal}
+              color="#3b82f6"
             />
             <MacroRing
               label="Grassi"
@@ -86,14 +86,14 @@ export function DashboardClient({ profile, initialEntries, today }: DashboardCli
         </CardContent>
       </Card>
 
-      <Card>
+      <Card className="dark:bg-gray-800 dark:border-gray-700">
         <CardHeader>
           <div className="flex items-center justify-between">
-            <CardTitle className="text-sm text-neutral-600 flex items-center gap-2">
+            <CardTitle className="text-sm text-neutral-600 dark:text-gray-400 flex items-center gap-2">
               <BookOpen className="h-4 w-4 text-emerald-500" />
               Ultimi 7 giorni
             </CardTitle>
-            <span className="text-xs text-neutral-400">Obiettivo: {profile.daily_calorie_goal} kcal</span>
+            <span className="text-xs text-neutral-400 dark:text-gray-500">Obiettivo: {profile.daily_calorie_goal} kcal</span>
           </div>
         </CardHeader>
         <CardContent className="pt-0">
@@ -102,15 +102,15 @@ export function DashboardClient({ profile, initialEntries, today }: DashboardCli
       </Card>
 
       <div className="grid grid-cols-2 gap-3">
-        <Card className="p-4">
-          <p className="text-xs text-neutral-500 font-medium">Calorie bruciate</p>
-          <p className="text-2xl font-bold text-neutral-800 mt-1">—</p>
-          <p className="text-xs text-neutral-400">Funzione in arrivo</p>
+        <Card className="p-4 dark:bg-gray-800 dark:border-gray-700">
+          <p className="text-xs text-neutral-500 dark:text-gray-400 font-medium">Calorie bruciate</p>
+          <p className="text-2xl font-bold text-neutral-800 dark:text-gray-100 mt-1">—</p>
+          <p className="text-xs text-neutral-400 dark:text-gray-500">Funzione in arrivo</p>
         </Card>
-        <Card className="p-4">
-          <p className="text-xs text-neutral-500 font-medium">Streak</p>
+        <Card className="p-4 dark:bg-gray-800 dark:border-gray-700">
+          <p className="text-xs text-neutral-500 dark:text-gray-400 font-medium">Streak</p>
           <p className="text-2xl font-bold text-amber-500 mt-1">🔥 —</p>
-          <p className="text-xs text-neutral-400">Giorni consecutivi</p>
+          <p className="text-xs text-neutral-400 dark:text-gray-500">Giorni consecutivi</p>
         </Card>
       </div>
     </div>
