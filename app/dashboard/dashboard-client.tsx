@@ -6,6 +6,7 @@ import { ChevronRight, TrendingUp, BookOpen } from 'lucide-react'
 import { CalorieSummary } from '@/components/calorie-summary'
 import { MacroRing } from '@/components/macro-ring'
 import { WeeklyChart } from '@/components/weekly-chart'
+import { WeightTracker } from '@/components/weight-tracker'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { calcDayTotals } from '@/lib/utils'
 import type { DiaryEntry, Profile } from '@/types'
@@ -101,18 +102,7 @@ export function DashboardClient({ profile, initialEntries, today }: DashboardCli
         </CardContent>
       </Card>
 
-      <div className="grid grid-cols-2 gap-3">
-        <Card className="p-4 dark:bg-gray-800 dark:border-gray-700">
-          <p className="text-xs text-neutral-500 dark:text-gray-400 font-medium">Calorie bruciate</p>
-          <p className="text-2xl font-bold text-neutral-800 dark:text-gray-100 mt-1">—</p>
-          <p className="text-xs text-neutral-400 dark:text-gray-500">Funzione in arrivo</p>
-        </Card>
-        <Card className="p-4 dark:bg-gray-800 dark:border-gray-700">
-          <p className="text-xs text-neutral-500 dark:text-gray-400 font-medium">Streak</p>
-          <p className="text-2xl font-bold text-amber-500 mt-1">🔥 —</p>
-          <p className="text-xs text-neutral-400 dark:text-gray-500">Giorni consecutivi</p>
-        </Card>
-      </div>
+      <WeightTracker />
     </div>
   )
 }
