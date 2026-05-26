@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, useTransition, lazy, Suspense } from 'react'
-import { Search, Plus, Loader2, ScanBarcode } from 'lucide-react'
+import { useState, useTransition, lazy, Suspense, useEffect } from 'react'
+import { Search, Plus, Loader2, ScanBarcode, Heart } from 'lucide-react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from './ui/dialog'
 import { Button } from './ui/button'
 import { Input } from './ui/input'
@@ -22,17 +22,67 @@ interface FoodSearchDialogProps {
   trigger?: React.ReactNode
 }
 
+function favKey(food: FoodItem) {
+  return `${food.name}__${food.brand ?? ''}`
+}
+
 export function FoodSearchDialog({ mealType, date, onAdded, trigger }: FoodSearchDialogProps) {
   const [open, setOpen] = useState(false)
   const [scanning, setScanning] = useState(false)
   const [query, setQuery] = useState('')
   const [results, setResults] = useState<FoodItem[]>([])
+  const [favorites, setFavorites] = useState<FoodItem[]>([])
+  const [favoriteKeys, setFavoriteKeys] = useState<Set<string>>(new Set())
   const [selected, setSelected] = useState<FoodItem | null>(null)
   const [quantity, setQuantity] = useState('100')
   const [barcodeError, setBarcodeError] = useState<string | null>(null)
   const [searching, startSearch] = useTransition()
   const [adding, startAdd] = useTransition()
   const [barcodeLoading, startBarcodeLoad] = useTransition()
+  const [, startToggleFav] = useTransition()
+
+  useEffect(() => {
+    if (!open) return
+    fetch('/api/food/favorites')
+      .then((r) => r.json())
+      .then((data: FoodItem[]) => {
+        setFavorites(data)
+        setFavoriteKeys(new Set(data.map(favKey)))
+      })
+      .catch(() => {})
+  }, [open])
+
+  function isFavorite(food: FoodItem) {
+    return favoriteKeys.has(favKey(food))
+  }
+
+  function toggleFavorite(food: FoodItem, e: React.MouseEvent) {
+    e.stopPropagation()
+    const key = favKey(food)
+    const alreadyFav = favoriteKeys.has(key)
+    startToggleFav(async () => {
+      if (alreadyFav) {
+        await fetch('/api/food/favorites', {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ food_name: food.name, food_brand: food.brand ?? null }),
+        })
+        setFavoriteKeys((prev) => { const s = new Set(prev); s.delete(key); return s })
+        setFavorites((prev) => prev.filter((f) => favKey(f) !== key))
+      } else {
+        const res = await fetch('/api/food/favorites', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(food),
+        })
+        if (res.ok) {
+          const saved: FoodItem = await res.json()
+          setFavoriteKeys((prev) => new Set([...prev, key]))
+          setFavorites((prev) => [saved, ...prev])
+        }
+      }
+    })
+  }
 
   function handleSearch() {
     if (!query.trim()) return
@@ -108,6 +158,10 @@ export function FoodSearchDialog({ mealType, date, onAdded, trigger }: FoodSearc
     if (!val) {
       setScanning(false)
       setBarcodeError(null)
+      setQuery('')
+      setResults([])
+      setSelected(null)
+      setQuantity('100')
     }
   }
 
@@ -121,6 +175,11 @@ export function FoodSearchDialog({ mealType, date, onAdded, trigger }: FoodSearc
       </Suspense>
     )
   }
+
+  const showFavorites = !query && favorites.length > 0 && !selected
+  const showResults = results.length > 0 && !selected
+  const listToShow = showResults ? results : showFavorites ? favorites : []
+  const listLabel = showResults ? null : showFavorites ? 'Preferiti' : null
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
@@ -164,37 +223,56 @@ export function FoodSearchDialog({ mealType, date, onAdded, trigger }: FoodSearc
             <p className="text-sm text-red-500 bg-red-50 dark:bg-red-900/20 rounded-lg px-3 py-2">{barcodeError}</p>
           )}
 
-          {results.length > 0 && !selected && (
-            <div className="max-h-56 overflow-y-auto space-y-1 rounded-xl border border-neutral-100 dark:border-gray-700 p-1">
-              {results.map((food) => (
-                <button
-                  key={food.id}
-                  onClick={() => setSelected(food)}
-                  className="w-full text-left px-3 py-3 rounded-lg hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-colors"
-                >
-                  <p className="text-sm font-medium text-neutral-800 dark:text-gray-100 line-clamp-1">{food.name}</p>
-                  <div className="flex items-center gap-2 mt-0.5">
-                    {food.brand && (
-                      <span className="text-xs text-neutral-400 dark:text-gray-500">{food.brand}</span>
-                    )}
-                    <Badge variant="default" className="text-xs">
-                      {Math.round(food.nutrients.calories_per_100g)} kcal/100g
-                    </Badge>
-                    {food.source === 'custom' && (
-                      <Badge className="text-xs bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 border-0">
-                        Comunità
-                      </Badge>
-                    )}
+          {listToShow.length > 0 && (
+            <div className="space-y-1">
+              {listLabel && (
+                <p className="text-xs font-medium text-neutral-400 dark:text-gray-500 uppercase tracking-wide px-1">{listLabel}</p>
+              )}
+              <div className="max-h-56 overflow-y-auto space-y-1 rounded-xl border border-neutral-100 dark:border-gray-700 p-1">
+                {listToShow.map((food) => (
+                  <div key={food.id} className="flex items-center gap-1">
+                    <button
+                      onClick={() => setSelected(food)}
+                      className="flex-1 text-left px-3 py-3 rounded-lg hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-colors min-w-0"
+                    >
+                      <p className="text-sm font-medium text-neutral-800 dark:text-gray-100 line-clamp-1">{food.name}</p>
+                      <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                        {food.brand && (
+                          <span className="text-xs text-neutral-400 dark:text-gray-500">{food.brand}</span>
+                        )}
+                        <Badge variant="default" className="text-xs">
+                          {Math.round(food.nutrients.calories_per_100g)} kcal/100g
+                        </Badge>
+                        {food.source === 'custom' && (
+                          <Badge className="text-xs bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 border-0">
+                            Comunità
+                          </Badge>
+                        )}
+                      </div>
+                    </button>
+                    <button
+                      onClick={(e) => toggleFavorite(food, e)}
+                      className="p-2 shrink-0 rounded-lg transition-colors hover:bg-neutral-100 dark:hover:bg-gray-700"
+                      title={isFavorite(food) ? 'Rimuovi dai preferiti' : 'Aggiungi ai preferiti'}
+                    >
+                      <Heart
+                        className={`h-4 w-4 transition-colors ${
+                          isFavorite(food)
+                            ? 'fill-red-500 text-red-500'
+                            : 'text-neutral-300 dark:text-gray-600'
+                        }`}
+                      />
+                    </button>
                   </div>
-                </button>
-              ))}
+                ))}
+              </div>
             </div>
           )}
 
           {!selected && (
             <div className="flex items-center justify-between">
               <span className="text-xs text-neutral-400 dark:text-gray-500">
-                {results.length === 0 && query ? 'Nessun risultato' : ''}
+                {results.length === 0 && query.trim() ? 'Nessun risultato' : ''}
               </span>
               <CreateFoodDialog onCreated={(food) => { setSelected(food); setResults([]) }} />
             </div>
@@ -203,18 +281,33 @@ export function FoodSearchDialog({ mealType, date, onAdded, trigger }: FoodSearc
           {selected && (
             <div className="space-y-4 rounded-xl bg-emerald-50 dark:bg-emerald-900/20 p-4">
               <div className="flex items-start justify-between">
-                <div>
+                <div className="flex-1 min-w-0">
                   <p className="font-semibold text-neutral-800 dark:text-gray-100">{selected.name}</p>
                   {selected.brand && (
                     <p className="text-xs text-neutral-500 dark:text-gray-400 mt-0.5">{selected.brand}</p>
                   )}
                 </div>
-                <button
-                  onClick={() => setSelected(null)}
-                  className="text-xs text-neutral-400 dark:text-gray-500 hover:text-neutral-600 dark:hover:text-gray-300 px-2 py-1"
-                >
-                  Cambia
-                </button>
+                <div className="flex items-center gap-1 shrink-0 ml-2">
+                  <button
+                    onClick={(e) => toggleFavorite(selected, e)}
+                    className="p-1.5 rounded-lg transition-colors hover:bg-emerald-100 dark:hover:bg-emerald-900/40"
+                    title={isFavorite(selected) ? 'Rimuovi dai preferiti' : 'Aggiungi ai preferiti'}
+                  >
+                    <Heart
+                      className={`h-4 w-4 transition-colors ${
+                        isFavorite(selected)
+                          ? 'fill-red-500 text-red-500'
+                          : 'text-neutral-300 dark:text-gray-600'
+                      }`}
+                    />
+                  </button>
+                  <button
+                    onClick={() => setSelected(null)}
+                    className="text-xs text-neutral-400 dark:text-gray-500 hover:text-neutral-600 dark:hover:text-gray-300 px-2 py-1"
+                  >
+                    Cambia
+                  </button>
+                </div>
               </div>
 
               <div>
