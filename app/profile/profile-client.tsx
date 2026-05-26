@@ -2,9 +2,8 @@
 
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { Loader2, LogOut, Save, User, Moon, Sun, Heart, Copy, Check } from 'lucide-react'
+import { Loader2, LogOut, Save, User, Heart, Copy, Check } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
-import { useTheme } from '@/lib/theme'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -20,7 +19,6 @@ const IBAN = 'IT78R0366901600534898976434'
 
 export function ProfileClient({ profile, email }: ProfileClientProps) {
   const router = useRouter()
-  const { theme, toggle } = useTheme()
   const [name, setName] = useState(profile.full_name ?? '')
   const [carbs, setCarbs] = useState(String(profile.daily_carbs_goal))
   const [protein, setProtein] = useState(String(profile.daily_protein_goal))
@@ -88,23 +86,14 @@ export function ProfileClient({ profile, email }: ProfileClientProps) {
 
   return (
     <div className="px-4 pt-6 space-y-4">
-      <div className="flex items-center justify-between mb-2">
-        <div className="flex items-center gap-3">
-          <div className="w-12 h-12 bg-emerald-100 dark:bg-emerald-900/40 rounded-full flex items-center justify-center">
-            <User className="h-6 w-6 text-emerald-600 dark:text-emerald-400" />
-          </div>
-          <div>
-            <h1 className="text-lg font-bold text-neutral-800 dark:text-gray-100">{name || 'Profilo'}</h1>
-            <p className="text-sm text-neutral-500 dark:text-gray-400">{email}</p>
-          </div>
+      <div className="flex items-center gap-3 mb-2">
+        <div className="w-12 h-12 bg-emerald-900/40 rounded-full flex items-center justify-center">
+          <User className="h-6 w-6 text-emerald-400" />
         </div>
-        <button
-          onClick={toggle}
-          className="p-2.5 rounded-full bg-neutral-100 dark:bg-gray-700 text-neutral-600 dark:text-gray-300 hover:bg-neutral-200 dark:hover:bg-gray-600 transition-colors"
-          title="Cambia tema"
-        >
-          {theme === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
-        </button>
+        <div>
+          <h1 className="text-lg font-bold text-gray-100">{name || 'Profilo'}</h1>
+          <p className="text-sm text-gray-400">{email}</p>
+        </div>
       </div>
 
       <Card className="dark:bg-gray-800 dark:border-gray-700">

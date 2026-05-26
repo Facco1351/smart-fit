@@ -9,15 +9,10 @@
 }
 
 body {
-  background: #f9fafb;
-  color: #111827;
-  font-family: var(--font-sans);
-  -webkit-font-smoothing: antialiased;
-}
-
-.dark body {
   background: #111827;
   color: #f9fafb;
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
 }
 
 .safe-bottom {
