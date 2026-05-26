@@ -1,7 +1,7 @@
 'use client'
 
-import { Trash2 } from 'lucide-react'
-import { useTransition } from 'react'
+import { Trash2, Loader2 } from 'lucide-react'
+import { useState, useTransition } from 'react'
 import { FoodSearchDialog } from './food-search-dialog'
 import type { DiaryEntry, MealType } from '@/types'
 import { MEAL_LABELS, MEAL_ICONS } from '@/types'
@@ -14,13 +14,16 @@ interface MealSectionProps {
 }
 
 export function MealSection({ mealType, entries, date, onUpdate }: MealSectionProps) {
+  const [deletingId, setDeletingId] = useState<string | null>(null)
   const [, startDelete] = useTransition()
 
   const total = entries.reduce((sum, e) => sum + (e.calories ?? 0), 0)
 
   function handleDelete(id: string) {
+    setDeletingId(id)
     startDelete(async () => {
       await fetch(`/api/diary/${id}`, { method: 'DELETE' })
+      setDeletingId(null)
       onUpdate()
     })
   }
@@ -57,9 +60,12 @@ export function MealSection({ mealType, entries, date, onUpdate }: MealSectionPr
                 <span className="text-sm font-semibold text-neutral-700 dark:text-gray-200">{Math.round(entry.calories)} kcal</span>
                 <button
                   onClick={() => handleDelete(entry.id)}
-                  className="p-2 rounded-lg text-neutral-300 dark:text-gray-600 hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                  disabled={deletingId === entry.id}
+                  className="p-2 rounded-lg text-neutral-300 dark:text-gray-600 hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors disabled:opacity-50"
                 >
-                  <Trash2 className="h-4 w-4" />
+                  {deletingId === entry.id
+                    ? <Loader2 className="h-4 w-4 animate-spin text-red-400" />
+                    : <Trash2 className="h-4 w-4" />}
                 </button>
               </div>
             </div>

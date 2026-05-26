@@ -52,7 +52,8 @@ export function DiaryClient({ initialEntries, profile, today }: DiaryClientProps
       <div className="flex items-center justify-between">
         <button
           onClick={() => goDay(-1)}
-          className="p-3 rounded-xl hover:bg-neutral-100 dark:hover:bg-gray-700 transition-colors"
+          disabled={loading}
+          className="p-3 rounded-xl hover:bg-neutral-100 dark:hover:bg-gray-700 transition-colors disabled:opacity-30"
         >
           <ChevronLeft className="h-5 w-5 text-neutral-600 dark:text-gray-400" />
         </button>
@@ -68,7 +69,7 @@ export function DiaryClient({ initialEntries, profile, today }: DiaryClientProps
 
         <button
           onClick={() => goDay(1)}
-          disabled={isToday}
+          disabled={isToday || loading}
           className="p-3 rounded-xl hover:bg-neutral-100 dark:hover:bg-gray-700 transition-colors disabled:opacity-30"
         >
           <ChevronRight className="h-5 w-5 text-neutral-600 dark:text-gray-400" />
