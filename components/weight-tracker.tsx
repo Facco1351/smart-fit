@@ -30,10 +30,12 @@ export function WeightTracker() {
   function handleSave() {
     if (!input || parseFloat(input) <= 0) return
     startSave(async () => {
+      const today = new Date()
+      const logged_at = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`
       const res = await fetch('/api/weight', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ weight_kg: parseFloat(input) }),
+        body: JSON.stringify({ weight_kg: parseFloat(input), logged_at }),
       })
       if (res.ok) {
         setInput('')
