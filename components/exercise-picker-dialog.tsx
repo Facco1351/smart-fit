@@ -71,17 +71,24 @@ export function ExercisePickerDialog({ planId, existingExerciseIds, onAdded }: E
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name: newName.trim(), muscle_group: newGroup }),
       })
-      if (res.ok) {
-        const created: Exercise = await res.json()
-        setExercises((prev) => [...prev, created].sort((a, b) =>
-          a.muscle_group.localeCompare(b.muscle_group) || a.name.localeCompare(b.name)
-        ))
-        setNewName('')
-        setNewGroup(MUSCLE_GROUPS[0])
-        setShowCreate(false)
-        // auto-add to plan
-        handleAdd(created.id)
-      }
+      if (!res.ok) return
+      const created: Exercise = await res.json()
+
+      await fetch(`/api/workout-plans/${planId}/exercises`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ exercise_id: created.id }),
+      })
+
+      setExercises((prev) => [...prev, created].sort((a, b) =>
+        a.muscle_group.localeCompare(b.muscle_group) || a.name.localeCompare(b.name)
+      ))
+      setNewName('')
+      setNewGroup(MUSCLE_GROUPS[0])
+      setShowCreate(false)
+      setOpen(false)
+      setQuery('')
+      onAdded()
     })
   }
 
