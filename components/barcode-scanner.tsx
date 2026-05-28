@@ -1,8 +1,9 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
-import { X, Loader2 } from 'lucide-react'
+import { useEffect, useRef, useState, useCallback } from 'react'
+import { X, Loader2, Flashlight, FlashlightOff } from 'lucide-react'
 import { BrowserMultiFormatReader } from '@zxing/browser'
+import { DecodeHintType } from '@zxing/library'
 
 interface BarcodeScannerProps {
   onResult: (barcode: string) => void
@@ -15,13 +16,40 @@ export function BarcodeScanner({ onResult, onClose }: BarcodeScannerProps) {
   onResultRef.current = onResult
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
+  const [torchOn, setTorchOn] = useState(false)
+  const [torchAvailable, setTorchAvailable] = useState(false)
+
+  const toggleTorch = useCallback(async () => {
+    if (!videoRef.current) return
+    const stream = videoRef.current.srcObject as MediaStream | null
+    if (!stream) return
+    const track = stream.getVideoTracks()[0]
+    if (!track) return
+    const next = !torchOn
+    try {
+      await track.applyConstraints({ advanced: [{ torch: next } as MediaTrackConstraintSet] })
+      setTorchOn(next)
+    } catch {
+      // torch not supported on this device
+    }
+  }, [torchOn])
 
   useEffect(() => {
     if (!videoRef.current) return
 
-    const reader = new BrowserMultiFormatReader()
+    const hints = new Map()
+    hints.set(DecodeHintType.TRY_HARDER, true)
+
+    const reader = new BrowserMultiFormatReader(hints)
     const controlsPromise = reader.decodeFromConstraints(
-      { video: { facingMode: 'environment' } },
+      {
+        video: {
+          facingMode: 'environment',
+          width: { ideal: 1920 },
+          height: { ideal: 1080 },
+          advanced: [{ focusMode: 'continuous' } as MediaTrackConstraintSet],
+        },
+      },
       videoRef.current,
       (result, _err, controls) => {
         if (result) {
@@ -32,7 +60,15 @@ export function BarcodeScanner({ onResult, onClose }: BarcodeScannerProps) {
     )
 
     controlsPromise
-      .then(() => setLoading(false))
+      .then(() => {
+        setLoading(false)
+        const stream = videoRef.current?.srcObject as MediaStream | null
+        if (stream) {
+          const track = stream.getVideoTracks()[0]
+          const caps = track?.getCapabilities?.() as Record<string, unknown> | undefined
+          if (caps && 'torch' in caps) setTorchAvailable(true)
+        }
+      })
       .catch(() => {
         setLoading(false)
         setError('Camera non accessibile. Controlla i permessi.')
@@ -47,12 +83,23 @@ export function BarcodeScanner({ onResult, onClose }: BarcodeScannerProps) {
     <div className="fixed inset-0 z-50 bg-black flex flex-col">
       <div className="flex items-center justify-between p-4 pt-safe-top">
         <p className="text-white font-semibold text-base">Scansiona codice a barre</p>
-        <button
-          onClick={onClose}
-          className="p-2 rounded-full bg-white/10 text-white active:bg-white/20"
-        >
-          <X className="h-5 w-5" />
-        </button>
+        <div className="flex items-center gap-2">
+          {torchAvailable && (
+            <button
+              onClick={toggleTorch}
+              className="p-2 rounded-full bg-white/10 text-white active:bg-white/20"
+              title={torchOn ? 'Spegni torcia' : 'Accendi torcia'}
+            >
+              {torchOn ? <FlashlightOff className="h-5 w-5" /> : <Flashlight className="h-5 w-5" />}
+            </button>
+          )}
+          <button
+            onClick={onClose}
+            className="p-2 rounded-full bg-white/10 text-white active:bg-white/20"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        </div>
       </div>
 
       <div className="flex-1 relative overflow-hidden">
