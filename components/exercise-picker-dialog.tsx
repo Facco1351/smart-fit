@@ -25,6 +25,7 @@ export function ExercisePickerDialog({ planId, existingExerciseIds, onAdded }: E
   const [showCreate, setShowCreate] = useState(false)
   const [newName, setNewName] = useState('')
   const [newGroup, setNewGroup] = useState(MUSCLE_GROUPS[0])
+  const [createError, setCreateError] = useState<string | null>(null)
   const [creating, startCreate] = useTransition()
 
   useEffect(() => {
@@ -65,20 +66,30 @@ export function ExercisePickerDialog({ planId, existingExerciseIds, onAdded }: E
 
   function handleCreate() {
     if (!newName.trim()) return
+    setCreateError(null)
     startCreate(async () => {
       const res = await fetch('/api/exercises', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name: newName.trim(), muscle_group: newGroup }),
       })
-      if (!res.ok) return
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({})) as { error?: string }
+        setCreateError(err.error ?? 'Errore creazione esercizio')
+        return
+      }
       const created: Exercise = await res.json()
 
-      await fetch(`/api/workout-plans/${planId}/exercises`, {
+      const res2 = await fetch(`/api/workout-plans/${planId}/exercises`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ exercise_id: created.id }),
       })
+      if (!res2.ok) {
+        const err = await res2.json().catch(() => ({})) as { error?: string }
+        setCreateError(err.error ?? 'Errore aggiunta alla scheda')
+        return
+      }
 
       setExercises((prev) => [...prev, created].sort((a, b) =>
         a.muscle_group.localeCompare(b.muscle_group) || a.name.localeCompare(b.name)
@@ -86,6 +97,7 @@ export function ExercisePickerDialog({ planId, existingExerciseIds, onAdded }: E
       setNewName('')
       setNewGroup(MUSCLE_GROUPS[0])
       setShowCreate(false)
+      setCreateError(null)
       setOpen(false)
       setQuery('')
       onAdded()
@@ -100,7 +112,7 @@ export function ExercisePickerDialog({ planId, existingExerciseIds, onAdded }: E
           Aggiungi esercizio
         </Button>
       </DialogTrigger>
-      <DialogContent className="dark:bg-gray-800 dark:border-gray-700 max-h-[80vh] flex flex-col">
+      <DialogContent aria-describedby={undefined} className="dark:bg-gray-800 dark:border-gray-700 max-h-[80vh] flex flex-col">
         <DialogHeader>
           <DialogTitle className="dark:text-gray-100">Aggiungi esercizio</DialogTitle>
         </DialogHeader>
@@ -181,6 +193,9 @@ export function ExercisePickerDialog({ planId, existingExerciseIds, onAdded }: E
                   ))}
                 </select>
               </div>
+              {createError && (
+                <p className="text-xs text-red-500 dark:text-red-400">{createError}</p>
+              )}
               <Button
                 onClick={handleCreate}
                 disabled={creating || !newName.trim()}
