@@ -2,12 +2,13 @@
 
 import { useState, useEffect } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
-import { LayoutDashboard, BookOpen, User, Loader2 } from 'lucide-react'
+import { LayoutDashboard, BookOpen, User, Loader2, Dumbbell } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 const links = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/diary', label: 'Diario', icon: BookOpen },
+  { href: '/scheda', label: 'Scheda', icon: Dumbbell },
   { href: '/profile', label: 'Profilo', icon: User },
 ]
 
@@ -37,7 +38,7 @@ export function BottomNav() {
               key={href}
               onClick={() => handleNav(href)}
               className={cn(
-                'flex flex-col items-center gap-0.5 px-6 py-2 rounded-xl transition-colors min-w-[64px]',
+                'flex flex-col items-center gap-0.5 px-4 py-2 rounded-xl transition-colors min-w-[56px]',
                 active
                   ? 'text-emerald-600 dark:text-emerald-400'
                   : 'text-neutral-400 dark:text-gray-500 hover:text-neutral-600 dark:hover:text-gray-300'

@@ -63,3 +63,35 @@ export const MEAL_ICONS: Record<MealType, string> = {
   dinner: '🌙',
   snack: '🍎',
 }
+
+export interface Exercise {
+  id: string
+  name: string
+  muscle_group: string
+}
+
+export interface WorkoutPlanExercise {
+  id: string
+  plan_id: string
+  exercise_id: string
+  exercise: Exercise
+  sets: number
+  reps: number
+  weight_kg: number | null
+  position: number
+}
+
+export interface WorkoutPlan {
+  id: string
+  name: string
+  exercises: WorkoutPlanExercise[]
+}
+
+export interface ExerciseLog {
+  id: string
+  exercise_id: string
+  weight_kg: number
+  sets: number | null
+  reps: number | null
+  logged_at: string
+}
