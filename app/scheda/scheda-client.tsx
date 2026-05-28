@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useTransition, useCallback } from 'react'
-import { Plus, Pencil, Trash2, Check, X, TrendingUp, Loader2, Dumbbell } from 'lucide-react'
+import { Plus, Pencil, Trash2, Check, X, TrendingUp, Loader2, Dumbbell, ChevronUp, ChevronDown } from 'lucide-react'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -86,6 +86,7 @@ function PlanCard({ plan, onUpdate, onSelectExercise }: PlanCardProps) {
   const [deleting, startDelete] = useTransition()
   const [removingId, setRemovingId] = useState<string | null>(null)
   const [, startRemove] = useTransition()
+  const [, startMove] = useTransition()
 
   function handleRename() {
     if (!nameInput.trim() || nameInput === plan.name) {
@@ -107,6 +108,28 @@ function PlanCard({ plan, onUpdate, onSelectExercise }: PlanCardProps) {
   function handleDelete() {
     startDelete(async () => {
       await fetch(`/api/workout-plans/${plan.id}`, { method: 'DELETE' })
+      onUpdate()
+    })
+  }
+
+  function handleMoveExercise(index: number, direction: 'up' | 'down') {
+    const target = direction === 'up' ? index - 1 : index + 1
+    if (target < 0 || target >= plan.exercises.length) return
+    const a = plan.exercises[index]
+    const b = plan.exercises[target]
+    startMove(async () => {
+      await Promise.all([
+        fetch(`/api/workout-plan-exercises/${a.id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ position: b.position }),
+        }),
+        fetch(`/api/workout-plan-exercises/${b.id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ position: a.position }),
+        }),
+      ])
       onUpdate()
     })
   }
@@ -176,8 +199,24 @@ function PlanCard({ plan, onUpdate, onSelectExercise }: PlanCardProps) {
           </p>
         )}
 
-        {plan.exercises.map((pe) => (
+        {plan.exercises.map((pe, peIndex) => (
           <div key={pe.id} className="flex items-center gap-1 group">
+            <div className="flex flex-col shrink-0">
+              <button
+                onClick={() => handleMoveExercise(peIndex, 'up')}
+                disabled={peIndex === 0}
+                className="p-0.5 text-neutral-300 dark:text-gray-600 hover:text-neutral-500 dark:hover:text-gray-400 disabled:opacity-20 disabled:cursor-not-allowed transition-colors"
+              >
+                <ChevronUp className="h-3.5 w-3.5" />
+              </button>
+              <button
+                onClick={() => handleMoveExercise(peIndex, 'down')}
+                disabled={peIndex === plan.exercises.length - 1}
+                className="p-0.5 text-neutral-300 dark:text-gray-600 hover:text-neutral-500 dark:hover:text-gray-400 disabled:opacity-20 disabled:cursor-not-allowed transition-colors"
+              >
+                <ChevronDown className="h-3.5 w-3.5" />
+              </button>
+            </div>
             <button
               onClick={() => onSelectExercise(pe)}
               className="flex-1 text-left px-3 py-2.5 rounded-lg hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-colors"
