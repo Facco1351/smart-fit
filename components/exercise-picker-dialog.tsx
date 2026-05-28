@@ -1,11 +1,14 @@
 'use client'
 
 import { useState, useEffect, useTransition } from 'react'
-import { Plus, Search, Loader2 } from 'lucide-react'
+import { Plus, Search, Loader2, ChevronDown, ChevronUp } from 'lucide-react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import type { Exercise } from '@/types'
+
+const MUSCLE_GROUPS = ['Petto', 'Schiena', 'Spalle', 'Braccia', 'Gambe', 'Core', 'Cardio']
 
 interface ExercisePickerDialogProps {
   planId: string
@@ -19,6 +22,10 @@ export function ExercisePickerDialog({ planId, existingExerciseIds, onAdded }: E
   const [query, setQuery] = useState('')
   const [adding, startAdd] = useTransition()
   const [addingId, setAddingId] = useState<string | null>(null)
+  const [showCreate, setShowCreate] = useState(false)
+  const [newName, setNewName] = useState('')
+  const [newGroup, setNewGroup] = useState(MUSCLE_GROUPS[0])
+  const [creating, startCreate] = useTransition()
 
   useEffect(() => {
     if (!open) return
@@ -56,6 +63,28 @@ export function ExercisePickerDialog({ planId, existingExerciseIds, onAdded }: E
     })
   }
 
+  function handleCreate() {
+    if (!newName.trim()) return
+    startCreate(async () => {
+      const res = await fetch('/api/exercises', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: newName.trim(), muscle_group: newGroup }),
+      })
+      if (res.ok) {
+        const created: Exercise = await res.json()
+        setExercises((prev) => [...prev, created].sort((a, b) =>
+          a.muscle_group.localeCompare(b.muscle_group) || a.name.localeCompare(b.name)
+        ))
+        setNewName('')
+        setNewGroup(MUSCLE_GROUPS[0])
+        setShowCreate(false)
+        // auto-add to plan
+        handleAdd(created.id)
+      }
+    })
+  }
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
@@ -68,6 +97,7 @@ export function ExercisePickerDialog({ planId, existingExerciseIds, onAdded }: E
         <DialogHeader>
           <DialogTitle className="dark:text-gray-100">Aggiungi esercizio</DialogTitle>
         </DialogHeader>
+
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-400" />
           <Input
@@ -77,6 +107,7 @@ export function ExercisePickerDialog({ planId, existingExerciseIds, onAdded }: E
             className="pl-9 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100 dark:placeholder-gray-400"
           />
         </div>
+
         <div className="flex-1 overflow-y-auto space-y-3 min-h-0">
           {Object.entries(grouped).map(([group, exs]) => (
             <div key={group}>
@@ -104,6 +135,54 @@ export function ExercisePickerDialog({ planId, existingExerciseIds, onAdded }: E
             <p className="text-sm text-neutral-400 dark:text-gray-500 text-center py-4">
               Nessun esercizio trovato
             </p>
+          )}
+        </div>
+
+        {/* Crea nuovo esercizio */}
+        <div className="border-t border-neutral-100 dark:border-gray-700 pt-3">
+          <button
+            onClick={() => setShowCreate((v) => !v)}
+            className="flex items-center gap-2 text-sm text-emerald-600 dark:text-emerald-400 font-medium w-full"
+          >
+            {showCreate ? <ChevronUp className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
+            Crea nuovo esercizio
+            {showCreate && <ChevronDown className="h-4 w-4 ml-auto" />}
+          </button>
+
+          {showCreate && (
+            <div className="mt-3 space-y-3">
+              <div>
+                <Label className="dark:text-gray-300 text-xs">Nome esercizio</Label>
+                <Input
+                  value={newName}
+                  onChange={(e) => setNewName(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleCreate()}
+                  placeholder="es. Panca con Manubri"
+                  autoFocus
+                  className="mt-1 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100 dark:placeholder-gray-400"
+                />
+              </div>
+              <div>
+                <Label className="dark:text-gray-300 text-xs">Gruppo muscolare</Label>
+                <select
+                  value={newGroup}
+                  onChange={(e) => setNewGroup(e.target.value)}
+                  className="mt-1 w-full rounded-md border border-neutral-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-neutral-900 dark:text-gray-100 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                >
+                  {MUSCLE_GROUPS.map((g) => (
+                    <option key={g} value={g}>{g}</option>
+                  ))}
+                </select>
+              </div>
+              <Button
+                onClick={handleCreate}
+                disabled={creating || !newName.trim()}
+                className="w-full"
+              >
+                {creating ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Plus className="h-4 w-4 mr-2" />}
+                Crea e aggiungi
+              </Button>
+            </div>
           )}
         </div>
       </DialogContent>
